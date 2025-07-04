@@ -83,4 +83,7 @@ async def on_message(message):
 if __name__ == "__main__":
     # ヘルスチェック用HTTPサーバを別スレッドで起動
     t = Thread(target=start_server)
-    t.start(
+    t.start()
+
+    # Discord Bot起動
+    client.run(os.environ["DISCORD_TOKEN"])

@@ -24,7 +24,7 @@ async def on_message(message):
         return
 
     # 対象のテキストチャンネルだけ反応
-    if message.channel.name != "test-こおちゃん用":
+    if message.channel.name != "┗✌️│ｵｽｽﾒｹﾞｰﾑ":
         return
 
     match = steam_url_pattern.search(message.content)

@@ -11,6 +11,10 @@ client = discord.Client(intents=intents)
 # Steam URL正規表現
 steam_url_pattern = re.compile(r"https://store\.steampowered\.com/app/(\d+)")
 
+# チャンネルID
+URL_TEXT_CHANNEL_ID = 1390656363394502715
+FORUM_CHANNEL_ID = 1390371450103398583
+
 # Bot起動時
 @client.event
 async def on_ready():
@@ -24,7 +28,7 @@ async def on_message(message):
         return
 
     # 対象のテキストチャンネルだけ反応
-    if message.channel.name != "┗✌️│ｵｽｽﾒｹﾞｰﾑ":
+    if message.channel.id != URL_TEXT_CHANNEL_ID:
         return
 
     match = steam_url_pattern.search(message.content)
@@ -55,18 +59,22 @@ async def on_message(message):
         price_text = "無料または価格情報なし"
 
     # フォーラムチャンネルを取得
-    forum_channel = discord.utils.get(message.guild.channels, name="🎮│興味ありゲームフォーラム")
+    forum_channel = message.guild.get_channel(FORUM_CHANNEL_ID)
     if forum_channel is None or not isinstance(forum_channel, discord.ForumChannel):
         await message.channel.send("フォーラムチャンネルが見つからないか、フォーラムではありません。")
         return
 
     # スレッド作成
-    await forum_channel.create_thread(
-        name=name,
-        content=f"価格: {price_text}\n🔗 {message.content}"
-    )
-
-    await message.channel.send(f"スレッドを作成しました: **{name}**")
+    try:
+        await forum_channel.create_thread(
+            name=name,
+            message=f"価格: {price_text}\n🔗 {message.content}"
+        )
+        await message.channel.send(f"スレッドを作成しました: **{name}**")
+    except discord.Forbidden:
+        await message.channel.send("スレッド作成に必要な権限がありません。")
+    except Exception as e:
+        await message.channel.send(f"スレッド作成中にエラーが発生しました: {e}")
 
 # 環境変数からトークン取得
 client.run(os.environ["DISCORD_TOKEN"])

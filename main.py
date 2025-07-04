@@ -63,7 +63,7 @@ async def on_message(message):
     # スレッド作成
     await forum_channel.create_thread(
         name=name,
-        content=f"{message.author.mention} が投稿\nタイトル **{name}**\n💰 価格: {price_text}\n🔗 {message.content}"
+        content=f"{message.author.mention} が投稿\nタイトル: "**{name}**"\n 価格: {price_text}\n🔗 {message.content}"
     )
 
     await message.channel.send(f"スレッドを作成しました: **{name}**")

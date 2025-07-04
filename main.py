@@ -2,33 +2,40 @@ import os
 import re
 import discord
 import requests
+import asyncio
+from fastapi import FastAPI
+from threading import Thread
+import uvicorn
 
 # Intents設定
 intents = discord.Intents.default()
 intents.message_content = True
 client = discord.Client(intents=intents)
 
+# FastAPIでヘルスチェックサーバ
+app = FastAPI()
+
+@app.get("/")
+async def read_root():
+    return {"status": "ok"}
+
+def start_server():
+    uvicorn.run(app, host="0.0.0.0", port=8000)
+
 # Steam URL正規表現
 steam_url_pattern = re.compile(r"https://store\.steampowered\.com/app/(\d+)")
 
-# チャンネルID
-URL_TEXT_CHANNEL_ID = 1390656363394502715
-FORUM_CHANNEL_ID = 1390371450103398583
-
-# Bot起動時
 @client.event
 async def on_ready():
     print(f"Logged in as {client.user}")
 
-# メッセージ受信時
 @client.event
 async def on_message(message):
-    # Bot自身のメッセージは無視
     if message.author.bot:
         return
 
-    # 対象のテキストチャンネルだけ反応
-    if message.channel.id != URL_TEXT_CHANNEL_ID:
+    # あなたの条件で動かす
+    if message.channel.id != 1390656363394502715:
         return
 
     match = steam_url_pattern.search(message.content)
@@ -59,22 +66,21 @@ async def on_message(message):
         price_text = "無料"
 
     # フォーラムチャンネルを取得
-    forum_channel = message.guild.get_channel(FORUM_CHANNEL_ID)
+    forum_channel = message.guild.get_channel(1390371450103398583)
     if forum_channel is None or not isinstance(forum_channel, discord.ForumChannel):
         await message.channel.send("フォーラムチャンネルが見つからないか、フォーラムではありません。")
         return
 
     # スレッド作成
-    try:
-        await forum_channel.create_thread(
-            name=name,
-            content=f"価格: {price_text}\n🔗 {message.content}"
-        )
-        await message.channel.send(f"スレッドを作成しました: **{name}**")
-    except discord.Forbidden:
-        await message.channel.send("スレッド作成に必要な権限がありません。")
-    except Exception as e:
-        await message.channel.send(f"スレッド作成中にエラーが発生しました: {e}")
+    await forum_channel.create_thread(
+        name=name,
+        content=f"価格: {price_text}\n🔗 {message.content}",
+        applied_tags=[]  # タグが必要ならここにIDを入れる
+    )
 
-# 環境変数からトークン取得
-client.run(os.environ["DISCORD_TOKEN"])
+    await message.channel.send(f"スレッドを作成しました: **{name}**")
+
+if __name__ == "__main__":
+    # ヘルスチェック用HTTPサーバを別スレッドで起動
+    t = Thread(target=start_server)
+    t.start(

@@ -56,7 +56,7 @@ async def on_message(message):
         else:
             price_text = f"{final_price}円"
     else:
-        price_text = "無料または価格情報なし"
+        price_text = "無料"
 
     # フォーラムチャンネルを取得
     forum_channel = message.guild.get_channel(FORUM_CHANNEL_ID)

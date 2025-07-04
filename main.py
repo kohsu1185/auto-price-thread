@@ -68,7 +68,7 @@ async def on_message(message):
     try:
         await forum_channel.create_thread(
             name=name,
-            message=f"価格: {price_text}\n🔗 {message.content}"
+            content=f"価格: {price_text}\n🔗 {message.content}"
         )
         await message.channel.send(f"スレッドを作成しました: **{name}**")
     except discord.Forbidden:

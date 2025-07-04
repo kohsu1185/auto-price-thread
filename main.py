@@ -55,7 +55,7 @@ async def on_message(message):
         price_text = "無料または価格情報なし"
 
     # フォーラムチャンネルを取得
-    forum_channel = discord.utils.get(message.guild.channels, name="興味ありゲームフォーラム")
+    forum_channel = discord.utils.get(message.guild.channels, name="🎮│興味ありゲームフォーラム")
     if forum_channel is None or not isinstance(forum_channel, discord.ForumChannel):
         await message.channel.send("フォーラムチャンネルが見つからないか、フォーラムではありません。")
         return

@@ -2,7 +2,6 @@ import os
 import re
 import discord
 import requests
-import asyncio
 from fastapi import FastAPI
 from threading import Thread
 import uvicorn
@@ -19,9 +18,6 @@ app = FastAPI()
 async def read_root():
     return {"status": "ok"}
 
-def start_server():
-    uvicorn.run(app, host="0.0.0.0", port=8000)
-
 # Steam URL正規表現
 steam_url_pattern = re.compile(r"https://store\.steampowered\.com/app/(\d+)")
 
@@ -34,7 +30,6 @@ async def on_message(message):
     if message.author.bot:
         return
 
-    # あなたの条件で動かす
     if message.channel.id != 1390656363394502715:
         return
 
@@ -65,25 +60,27 @@ async def on_message(message):
     else:
         price_text = "無料"
 
-    # フォーラムチャンネルを取得
     forum_channel = message.guild.get_channel(1390371450103398583)
     if forum_channel is None or not isinstance(forum_channel, discord.ForumChannel):
         await message.channel.send("フォーラムチャンネルが見つからないか、フォーラムではありません。")
         return
 
-    # スレッド作成
     await forum_channel.create_thread(
         name=name,
         content=f"価格: {price_text}\n🔗 {message.content}",
-        applied_tags=[]  # タグが必要ならここにIDを入れる
+        applied_tags=[]
     )
 
     await message.channel.send(f"スレッドを作成しました: **{name}**")
 
+def start_discord():
+    client.run(os.environ["DISCORD_TOKEN"])
+
 if __name__ == "__main__":
-    # ヘルスチェック用HTTPサーバを別スレッドで起動
-    t = Thread(target=start_server)
+    # Discord Bot を先にスレッドで動かす
+    t = Thread(target=start_discord)
     t.start()
 
-    # Discord Bot起動
-    client.run(os.environ["DISCORD_TOKEN"])
+    # uvicorn は「メインプロセス」で実行
+    uvicorn.run(app, host="0.0.0.0", port=8000)
+

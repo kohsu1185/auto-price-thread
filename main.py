@@ -2,16 +2,16 @@ import os
 import re
 import discord
 import requests
+import asyncio
 from fastapi import FastAPI
-from threading import Thread
 import uvicorn
 
-# Intents設定
+# Discord Intents
 intents = discord.Intents.default()
 intents.message_content = True
 client = discord.Client(intents=intents)
 
-# FastAPIでヘルスチェックサーバ
+# FastAPIアプリ
 app = FastAPI()
 
 @app.get("/")
@@ -68,19 +68,22 @@ async def on_message(message):
     await forum_channel.create_thread(
         name=name,
         content=f"価格: {price_text}\n🔗 {message.content}",
-        applied_tags=[]
+        applied_tags=[]  # タグIDが必要なら指定
     )
 
     await message.channel.send(f"スレッドを作成しました: **{name}**")
 
-def start_discord():
-    client.run(os.environ["DISCORD_TOKEN"])
+async def main():
+    # Discord Botをバックグラウンドタスクで起動
+    discord_task = asyncio.create_task(client.start(os.environ["DISCORD_TOKEN"]))
+
+    # FastAPI(Uvicorn)を同じイベントループで起動
+    config = uvicorn.Config(app, host="0.0.0.0", port=8000, log_level="info")
+    server = uvicorn.Server(config)
+    await server.serve()
+
+    # Discordが終わるまで待つ
+    await discord_task
 
 if __name__ == "__main__":
-    # Discord Bot を先にスレッドで動かす
-    t = Thread(target=start_discord)
-    t.start()
-
-    # uvicorn は「メインプロセス」で実行
-    uvicorn.run(app, host="0.0.0.0", port=8000)
-
+    asyncio.run(main())
